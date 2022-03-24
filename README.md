@@ -406,14 +406,16 @@ contiki-iotlab-a8-m3.a  contiki-iotlab-m3.a  Makefile  obj_iotlab-a8-m3  obj_iot
 
 **Подключение к выходу запущенного узла и считывания данных датчика во времени**
 
-     ```
+ ```
 sannikov@grenoble:~/iot-lab/parts/contiki/examples/iotlab/03-sensors-collecting$ ssh sannikov@grenoble.iot-lab.info
  ``` 
  В данном эксперементе использовался узел с номером 99
- ``` 
+ 
+``` 
 sannikov@grenoble:~$ nc m3-99 20000
  ``` 
  **Показания датчика во времени**
+ 
 ``` 
 gyros: 140 -892 61 xyz m°/s
 magne: 50 283 -612 xyz mgauss
@@ -495,5 +497,464 @@ accel: -138 -10 -1008 xyz mg
 magne: 47 282 -611 xyz mgauss
 gyros: 1111 -236 -113 xyz m°/s
  ``` 
+ <img width="476" alt="image" src="https://user-images.githubusercontent.com/101215070/159999330-3c2cba6b-e4a6-4e41-b0ce-861afb4dc129.png">
+
  **Вывод о эксперементе №1**
  В данной работе мы изучили работу в настройенной среде, взаимодейсвие с виртуальными узлами M3 и A8, метод их компеляции  и как запускать эксперемент на веб-сервере через терминал 
+ ## Проведение эксперемента №2
+Целью данной работы является создание профиля для мониторинга радиоактивности во время эксперимента, когда 2 узла обмениваются данными. Так как каждый узел эксперимента управляется своим узлом управления (недоступным для экспериментатора), который взаимодействует пассивно или активно. Он отслеживает потребление узла, мощность радиосигнала (RSSI) и выбирает источник питания (аккумулятор или постоянный ток с Poe). Сам профиль представляет собой конфигурацию узла управления во время эксперимента.
+ **Изучение прошивки и установка радиоканала**
+ На данном этаме нужно было изучить файлы прошивки и задать номер канала. В данной работе мы использовали для 1 радиоканала - 11 канал. 
+  ``` 
+sannikov@grenoble:~/iot-lab/parts/openlab$ cd appli/iotlab_examples/tutorial 
+sannikov@grenoble:~/iot-lab/parts/openlab/appli/iotlab_examples/tutorial$ cat README.md
+sannikov@grenoble:~/iot-lab/parts/openlab/appli/iotlab_examples/tutorial$ less main.c
+``` 
+*Компиляция прошивки*
+Скомпилировали обучающую прошивку в директорию build.m3/ (сгенерируйте бинарные файлы *.elf с поддержкой радиочипсета at86rf231)
+  ``` 
+sannikov@grenoble:~/iot-lab/parts/openlab/build.m3$ make tutorial_m3 
+sannikov@grenoble:~/iot-lab/parts/openlab/build.m3$ ls bin/tutorial_m3 .elf 
+bin/tutorial_m3.elf
+``` 
+*Скачивание файла на компьютер*
+Для этого мы открыли новый терминал
+``` 
+oldest@oldest-Lenovo-ideapad-320-15IKB:~$ scp sannikov@grenoble:~/iot-lab/parts/openlab/build.m3/bin/tutorial_m3.elf tutorial_m3.elf 
+tutorial_m3.elf 100% 99 КБ 98,9 КБ/с 00:00 
+oldest@oldest-Lenovo-ideapad-320-15IKB:~$ ls tutorial_m3.elf  
+tutorial_m3.elf
+``` 
+tutorial_m3.elf - требуемый файл
+*Производим необходимые настройки на портале*
+<img width="1439" alt="image" src="https://user-images.githubusercontent.com/101215070/160003741-1201634f-d086-4268-af81-514aac85b5bb.png">
+*Запсукаем наш эксперемент из профиля*
+В настройках эксперемнта мы выбираем нужные узлы, сайт и количество узлов. А также добавляем наш файл с прошивкой и интегрируем нужные настройки созданные ранее
+
+<img width="400" alt="image" src="https://user-images.githubusercontent.com/101215070/160004660-2f1f9667-f660-4546-94f3-9116c2b3fbf3.png">
+
+
+<img width="1260" alt="image" src="https://user-images.githubusercontent.com/101215070/160004628-e9351a6b-de11-4b1a-bb2a-14963cca6cfe.png">
+Ждем старта эксперемента 
+
+**Подключаемся к внешнему сайту SSH с помощью X11Forwarding**
+
+``` 
+ssh -X sannikov@grenoble.iot-lab.info
+``` 
+**Подключаемся  последовательному порту первого узла для взаимодействия**
+В нашем случае это 100 узел
+``` 
+sannikov@grenoble:~$ nc m3-100 20000
+``` 
+**Вывод подключения**
+``` 
+IoT-LAB Simple Demo program
+ Type command
+	h:	print this help
+	t:	temperature measure
+        l:	luminosity measure
+        p:      pressure measure
+	s:	send a radio packet
+        b:      send a big radio packet
+        e:      toogle leds blinking
+
+ Type Enter to stop printing this help
+ cmd >
+ ``` 
+**Открываем второй терминал**
+Также подключаемся к внешнему интерфейсу SSH, а оттуда подключаемся к последовательныому порту другого узла - 101.
+ ``` 
+ssh sannikov@grenoble.iot-lab.info 
+sannikov@grenoble:~$ nc m3-101 20000
+ ``` 
+ 
+ **Отправка  радиопакетов*
+ На первом терминале мы отправляем радиопакеты, второй терминал их получает 
+ <img width="935" alt="image" src="https://user-images.githubusercontent.com/101215070/160006094-94e2312d-0612-4620-a61d-d157e2d61cdf.png">
+  **Вывод собранных данных*
+  
+ Измеренные значения RSSI можно хранить домашней папке с файлами oml.
+   ``` 
+sannikov@grenoble:~$ меньше ~/306845/radio/m3-100.oml 
+ ``` 
+
+ **Вывод о эксперементе №2**
+ В данном эксперемнте мы создали область для мониторинга отправка и принятие данных от узлов. 
+ 
+  ## Проведение эксперемента №3
+  
+
+
+В этом упражнении мы узнаем о протоколе MQTT* и его ограниченном варианте, называемом MQTT-SN, с использованием ОС RIOT на трех узлах A8-M3 в FIT/IoT-LAB. Сообщения MQTT, опубликованные в  хоста внешнего интерфейса, будут отображаться клиентом MQTT-SN, работающим на узле ОС RIOT. Узлы эксперимента будут иметь следующие функции:
+- Первый узел будет использоваться в качестве граничного маршрутизатора для распространения префикса IPv6 через его беспроводной интерфейс.
+- Второй узел будет использоваться как MQTT-брокер с помощью приложения mosquitto.rsmb .
+- На третьем узле будет запущен клиент MQTT-SN для подключения к брокеру.
+
+*MQTT (MQ Telemetry Transport) — это протокол подключения IoT между машинами (M2M), разработанный как чрезвычайно легкий протокол публикации/подписки для передачи сообщений между устройствами.
+
+
+ **Подготовка**
+
+Подключитесь к внешнему интерфейсу SSH сайта Saclay FIT/IoT-LAB
+ ``` 
+oldest@oldest-Lenovo-ideapad-320-15IKB:~/Desktop$ ssh sannikov@saclay.iot-lab.info
+Linux saclay 4.19.0-13-amd64 #1 SMP Debian 4.19.160-2 (2020-11-28) x86_64
+Welcome FIT IoT-LAB users
+
+Charter:
+* FIT IoT-LAB is shared among several users, so make reasonable use of the platform
+* Quote FIT IoT-LAB in your scientific papers. Usage of FIT IoT-LAB is free of charge.
+  In return, you must quote FIT IoT-LAB in your publication if your experiments results
+  are based on FIT IoT-LAB testbed:
+
+  1. Add acknowledgements to FIT IoT-LAB in introduction or conclusion of the publication
+  2. Add citation to the reference article of FIT IoT-LAB. See details here:
+     https://www.iot-lab.info/charter/
+  3. Send email to admin@iot-lab.info once your publication has been accepted in order
+     to update hall of fame:
+     https://www.iot-lab.info/publications/
+
+Post your issues on:
+* the user mailing-list: users@iot-lab.info
+* or the bug-tracker: https://github.com/iot-lab/iot-lab/issues
+Last login: Wed Mar 23 22:09:01 2022 from 192.168.5.254
+ ``` 
+ **Аутенфикация и отправка эксперемент**
+
+Пройдите аутентификацию на испытательном стенде и отправьте 60-минутный эксперимент с использованием трех узлов типа A8-M3 (прошивка узла будет загружена позже), затем дождитесь начала эксперимента
+
+ ``` 
+sannikov@saclay:~$ iotlab-auth -u sannikov
+Password: 
+"Written"
+sannikov@saclay:~$ iotlab-experiment submit -n riot_mqtt -d 60 -l 3,archi=a8:at86rf231+site=saclay
+{
+    "id": 306864
+}
+sannikov@saclay:~$ iotlab-experiment wait
+Waiting that experiment 306864 gets in state Running
+"Running"
+ ``` 
+<img width="1263" alt="image" src="https://user-images.githubusercontent.com/101215070/160010176-fe5a4387-543b-4c04-ae9f-f39396caea00.png">
+
+ **Использование индефекаторов**
+
+Запишим отображаемый идентификатор эксперимента, а затем получим идентификаторы выделенных узлов после запуска эксперимента, используя приведенные ниже команды для получения дополнительной информации об эксперименте:
+ ``` 
+sannikov@saclay:~$ iotlab-experiment get -i 306864 -s
+sys:1: DeprecationWarning: exp-state command is deprecated and will be removed in next release. Please use print instead.
+
+
+{
+    "state": "Running"
+}
+
+ ``` 
+Ниже вы увидите информацию о трех запущенных узнал
+
+ ``` 
+sannikov@saclay:~$ iotlab-experiment get -i 306864 -r
+sys:1: DeprecationWarning: resources command is deprecated and will be removed in next release. Please use nodes instead.
+
+
+{
+    "items": [
+        {
+            "archi": "a8:at86rf231",
+            "camera": "0",
+            "mobile": "0",
+            "mobility_type": " ",
+            "network_address": "a8-101.saclay.iot-lab.info",
+            "power_consumption": "1",
+            "power_control": "1",
+            "production": "YES",
+            "radio_sniffing": "1",
+            "site": "saclay",
+            "state": "Alive",
+            "uid": "9964",
+            "x": "11.5",
+            "y": "45",
+            "z": "2.5"
+        },
+        {
+            "archi": "a8:at86rf231",
+            "camera": "0",
+            "mobile": "0",
+            "mobility_type": " ",
+            "network_address": "a8-102.saclay.iot-lab.info",
+            "power_consumption": "1",
+            "power_control": "1",
+            "production": "YES",
+            "radio_sniffing": "1",
+            "site": "saclay",
+            "state": "Alive",
+            "uid": "b866",
+            "x": "15.5",
+            "y": "45",
+            "z": "2.5"
+        },
+        {
+            "archi": "a8:at86rf231",
+            "camera": "0",
+            "mobile": "0",
+            "mobility_type": " ",
+            "network_address": "a8-100.saclay.iot-lab.info",
+            "power_consumption": "1",
+            "power_control": "1",
+            "production": "YES",
+            "radio_sniffing": "1",
+            "site": "saclay",
+            "state": "Alive",
+            "uid": "9458",
+            "x": "8.5",
+            "y": "45",
+            "z": "2.5"
+        }
+    ]
+}
+
+ ``` 
+
+**Настройка прошивки первого узнал**
+
+Первый узел ( a8-1в нашем примере) будет действовать как граничный маршрутизатор с использованием gnrc_border_routerкода. Для прошивки нужно клонировать репозиторий ОС RIOT с GitHub:
+
+ ``` 
+sannikov@saclay:~$ git clone https://github.com/RIOT-OS/RIOT.git
+Cloning into 'RIOT'...
+remote: Enumerating objects: 304556, done.
+remote: Total 304556 (delta 0), reused 0 (delta 0), pack-reused 304556
+Receiving objects: 100% (304556/304556), 115.10 MiB | 17.84 MiB/s, done.
+Resolving deltas: 100% (203569/203569), done.
+Checking out files: 100% (14099/14099), done.
+
+ ``` 
+Долее собрать  прошивку "gnrc_border_router " с соответствующей скоростью передачи данных для узлов A8-M3, которая составляет 500 000
+
+ ``` 
+sannikov@saclay:~$ source /opt/riot.source
+sannikov@saclay:~$ cd RIOT
+sannikov@saclay:~/RIOT$ make ETHOS_BAUDRATE=500000 BOARD=iotlab-a8-m3 clean all -C examples/gnrc_border_router
+ ``` 
+**Вывод**
+
+ ``` 
+make: Entering directory '/senslab/users/sannikov/RIOT/examples/gnrc_border_router'
+Building application "gnrc_border_router" for "iotlab-a8-m3" with MCU "stm32".
+
+[INFO] cloning stm32cmsis
+Cloning into '/senslab/users/sannikov/RIOT/build/stm32/cmsis/f1'...
+remote: Enumerating objects: 193, done.
+remote: Counting objects: 100% (193/193), done.
+remote: Compressing objects: 100% (52/52), done.
+remote: Total 193 (delta 140), reused 189 (delta 136), pack-reused 0
+Receiving objects: 100% (193/193), 269.09 KiB | 4.64 MiB/s, done.
+Resolving deltas: 100% (140/140), done.
+HEAD is now at 71ad5b3 Release v4.3.3
+[INFO] updating stm32cmsis /senslab/users/sannikov/RIOT/build/stm32/cmsis/f1/.pkg-state.git-downloaded
+echo 71ad5b3bf5cbb4d35cf8c8726c1b343871f0df0a   > /senslab/users/sannikov/RIOT/build/stm32/cmsis/f1/.pkg-state.git-downloaded
+[INFO] patch stm32cmsis
+Applying: stm32f1xx: remove ErrorStatus
+"make" -C /senslab/users/sannikov/RIOT/boards/common/init
+"make" -C /senslab/users/sannikov/RIOT/boards/iotlab-a8-m3
+"make" -C /senslab/users/sannikov/RIOT/boards/common/iotlab
+"make" -C /senslab/users/sannikov/RIOT/core
+"make" -C /senslab/users/sannikov/RIOT/core/lib
+"make" -C /senslab/users/sannikov/RIOT/cpu/stm32
+"make" -C /senslab/users/sannikov/RIOT/cpu/cortexm_common
+"make" -C /senslab/users/sannikov/RIOT/cpu/cortexm_common/periph
+"make" -C /senslab/users/sannikov/RIOT/cpu/stm32/periph
+"make" -C /senslab/users/sannikov/RIOT/cpu/stm32/stmclk
+"make" -C /senslab/users/sannikov/RIOT/cpu/stm32/vectors
+"make" -C /senslab/users/sannikov/RIOT/drivers
+"make" -C /senslab/users/sannikov/RIOT/drivers/at86rf2xx
+"make" -C /senslab/users/sannikov/RIOT/drivers/ethos
+"make" -C /senslab/users/sannikov/RIOT/drivers/netdev
+"make" -C /senslab/users/sannikov/RIOT/drivers/periph_common
+"make" -C /senslab/users/sannikov/RIOT/sys
+"make" -C /senslab/users/sannikov/RIOT/sys/auto_init
+"make" -C /senslab/users/sannikov/RIOT/sys/div
+"make" -C /senslab/users/sannikov/RIOT/sys/evtimer
+"make" -C /senslab/users/sannikov/RIOT/sys/fmt
+"make" -C /senslab/users/sannikov/RIOT/sys/frac
+"make" -C /senslab/users/sannikov/RIOT/sys/iolist
+"make" -C /senslab/users/sannikov/RIOT/sys/isrpipe
+"make" -C /senslab/users/sannikov/RIOT/sys/luid
+"make" -C /senslab/users/sannikov/RIOT/sys/malloc_thread_safe
+"make" -C /senslab/users/sannikov/RIOT/sys/net/application_layer/uhcp
+"make" -C /senslab/users/sannikov/RIOT/sys/net/crosslayer/inet_csum
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netapi
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netif
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netif/ethernet
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netif/hdr
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netif/ieee802154
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netif/init_devs
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/netreg
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/icmpv6
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/icmpv6/echo
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/ipv6
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/ipv6/hdr
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/ipv6/nib
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/ndp
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/ctx
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/frag
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/frag/fb
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/frag/rb
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/iphc
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/network_layer/sixlowpan/nd
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/pkt
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/pktbuf
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/pktbuf_static
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/sock
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/sock/udp
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/transport_layer/udp
+"make" -C /senslab/users/sannikov/RIOT/sys/net/gnrc/application_layer/uhcpc
+"make" -C /senslab/users/sannikov/RIOT/sys/net/link_layer/eui_provider
+"make" -C /senslab/users/sannikov/RIOT/sys/net/link_layer/ieee802154
+"make" -C /senslab/users/sannikov/RIOT/sys/net/link_layer/l2util
+"make" -C /senslab/users/sannikov/RIOT/sys/net/netif
+"make" -C /senslab/users/sannikov/RIOT/sys/net/netutils
+"make" -C /senslab/users/sannikov/RIOT/sys/net/network_layer/icmpv6
+"make" -C /senslab/users/sannikov/RIOT/sys/net/network_layer/ipv6/addr
+"make" -C /senslab/users/sannikov/RIOT/sys/net/network_layer/ipv6/hdr
+"make" -C /senslab/users/sannikov/RIOT/sys/net/network_layer/sixlowpan
+"make" -C /senslab/users/sannikov/RIOT/sys/net/transport_layer/udp
+"make" -C /senslab/users/sannikov/RIOT/sys/newlib_syscalls_default
+"make" -C /senslab/users/sannikov/RIOT/sys/pm_layered
+"make" -C /senslab/users/sannikov/RIOT/sys/posix/inet
+"make" -C /senslab/users/sannikov/RIOT/sys/ps
+"make" -C /senslab/users/sannikov/RIOT/sys/random
+"make" -C /senslab/users/sannikov/RIOT/sys/shell
+"make" -C /senslab/users/sannikov/RIOT/sys/shell/commands
+"make" -C /senslab/users/sannikov/RIOT/sys/tsrb
+"make" -C /senslab/users/sannikov/RIOT/sys/ztimer
+"make" -C /senslab/users/sannikov/RIOT/sys/ztimer64
+   text	   data	    bss	    dec	    hex	filename
+  80808	    188	  22132	 103128	  192d8	/senslab/users/sannikov/RIOT/examples/gnrc_border_router/bin/iotlab-a8-m3/gnrc_border_router.elf
+make: Leaving directory '/senslab/users/sannikov/RIOT/examples/gnrc_border_router'
+
+ ``` 
+Компилируем  и прошиваем скомпилированную прошивку на первый экспериментальный узел
+
+```
+sannikov@saclay:~/RIOT$ scp examples/gnrc_border_router/bin/iotlab-a8-m3/gnrc_border_router.elf root@node-a8-100:
+gnrc_border_router.elf                        100% 3104KB   3.0MB/s   00:01    
+sannikov@saclay:~/RIOT$ ssh root@node-a8-100
+root@node-a8-100:~# flash_a8_m3 gnrc_border_router.elf
+Open On-Chip Debugger 0.10.0+dev-01293-g7c88e76a7-dirty (2021-10-22-12:48)
+Licensed under GNU GPL v2
+For bug reports, read
+	http://openocd.org/doc/doxygen/bugs.html
+debug_level: 0
+
+trst_and_srst separate srst_nogate trst_push_pull srst_open_drain connect_assert_srst
+
+    TargetName         Type       Endian TapName            State       
+--  ------------------ ---------- ------ ------------------ ------------
+ 0* stm32f1x.cpu       cortex_m   little stm32f1x.cpu       reset
+
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x080017f4 msp: 0x20010000
+target halted due to debug-request, current mode: Thread 
+xPSR: 0x01000000 pc: 0x080017f4 msp: 0x20010000
+auto erase enabled
+wrote 81920 bytes from file /home/root/gnrc_border_router.elf in 3.561459s (22.463 KiB/s)
+
+verified 80996 bytes in 1.249479s (63.305 KiB/s)
+
+shutdown command invoked
+flash OK
+```
+Прошивка сделана! 
+
+**Настройка сетевых параметров пограничного маршрутизатора**
+
+Используем первый узел для компиляции инструмента с именем uhcpd(Micro Host Configuration Protocol)
+```
+root@node-a8-100:~# cd ~/A8/riot/RIOT/dist/tools/uhcpd
+root@node-a8-100:~/A8/riot/RIOT/dist/tools/uhcpd# make clean all
+rm -f bin/uhcpd
+cc -g -O3 -Wall -DUHCP_SERVER -I../../../sys/include -I. ../../../sys/net/application_layer/uhcp/uhcp.c uhcpd.c -o bin/uhcpd
+
+```
+
+Также скомпилируем инструменты с именем ethos(Ethernet Over Serial) и настроим общедоступную сеть IPv6 узла:
+
+```
+root@node-a8-100:~/A8/riot/RIOT/dist/tools/uhcpd# cd ../ethos
+root@node-a8-100:~/A8/riot/RIOT/dist/tools/ethos# make clean all
+rm -f ethos
+cc -O3 -Wall ethos.c -o ethos
+root@node-a8-100:~/A8/riot/RIOT/dist/tools/ethos# ./start_network.sh /dev/ttyA8_M3 tap0 2001:660:3207:401::/64 500000
+```
+Следующий вывод говорит о корректной работе
+
+```
+net.ipv6.conf.tap0.forwarding = 1
+net.ipv6.conf.tap0.accept_ra = 0
+----> ethos: sending hello.
+----> ethos: activating serial pass through.
+----> ethos: hello reply received
+----> ethos: hello reply received
+```
+
+**Настройка и запуск брокера MQTT**
+
+В другом терминале подключитесь ко второму узлу ( a8-101) 
+Подключаемся к внешнему интерфейсу Saclay SSH, затем ко второму узлу
+
+```
+oldest@oldest-Lenovo-ideapad-320-15IKB:~/Desktop$ ssh sannikov@saclay.iot-lab.info
+
+sannikov@saclay:~$ ssh root@node-a8-101
+```
+Создаем и редактируем  файл конфигурации config.conf.
+
+```
+root@node-a8-101:~# vim config.conf
+```
+
+Добавляем код конфигурации, который сделает брокера MQTT доступным с любого узла за пограничным маршрутизатором, используя MQTT-SN на порту 1885, и из внешнего интерфейса SSH, используя MQTT на порту 1886
+
+```
+# Enable debugging output
+ trace_output protocol
+
+ # Listen for MQTT-SN traffic on UDP port 1885
+ listener 1885 INADDR_ANY mqtts
+ ipv6 true
+
+ # Listen to MQTT connections on TCP port 1886
+ listener 1886 INADDR_ANY
+ ipv6 true
+```
+
+Получаем глобальный IPv6-адрес этого узла, так как он понадобится в дальнейшем для подключения к нему на шаге 6:
+
+```
+root@node-a8-101:~# ip -6 -o addr show eth0
+2: eth0    inet6 2001:660:3207:400::65/64 scope global \       valid_lft forever preferred_lft forever
+2: eth0    inet6 fe80::fadc:7aff:fe01:9910/64 scope link \       valid_lft forever preferred_lft forever
+root@node-a8-101:~# broker_mqtts config.conf
+```
+Запускаем брокера на втором узле
+
+```
+root@node-a8-2:~# broker_mqtts config.conf
+```
+**Полученный вывод в терминале брокера MQTT**
+```
+20220323 212730.730 CWNAN9999I Really Small Message Broker
+20220323 212730.735 CWNAN9998I Part of Project Mosquitto in Eclipse
+(http://projects.eclipse.org/projects/technology.mosquitto)
+20220323 212730.737 CWNAN0049I Configuration file name is config.conf
+20220323 212730.749 CWNAN0053I Version 1.3.0.2, Dec 20 2020 23:34:33
+20220323 212730.751 CWNAN0054I Features included: bridge MQTTS 
+20220323 212730.752 CWNAN9993I Authors: Ian Craggs (icraggs@uk.ibm.com), Nicholas O'Leary
+20220323 212730.755 CWNAN0300I MQTT-S protocol starting, listening on port 1885
+20220323 212730.757 CWNAN0014I MQTT protocol starting, listening on port 1886
+
+```
