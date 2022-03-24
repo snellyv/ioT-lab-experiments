@@ -1057,3 +1057,7 @@ error: unable to subscribe to test/riot
 **Пример работы терминалов**
 <img width="1026" alt="image" src="https://user-images.githubusercontent.com/101215070/160013310-4a6d9512-b108-406f-9ab6-5407d3e91d97.png">
 
+Ссылка на видео: 
+
+https://user-images.githubusercontent.com/101215070/160014007-036b26a0-3f22-4e51-a2b2-791ac9b0a431.mp4
+
