@@ -958,3 +958,102 @@ root@node-a8-2:~# broker_mqtts config.conf
 20220323 212730.757 CWNAN0014I MQTT protocol starting, listening on port 1886
 
 ```
+**Настройка клиента MQTT-SN**
+
+Для настройки клиента используем третий терминал a8-3
+
+Войдемв интерфейс Saclay SSH, собираем и прошьем прошивку RIOT MQTT-SN:
+
+```
+oldest@oldest-Lenovo-ideapad-320-15IKB:~/Desktop$ ssh sannikov@saclay.iot-lab.info
+```
+Прошивка 
+
+```
+sannikov@saclay:~$ source /opt/riot.source
+sannikov@saclay:~$ cd RIOT
+sannikov@saclay:~/RIOT$ make BOARD=iotlab-a8-m3 -C examples/emcute_mqttsn
+sannikov@saclay:~/RIOT/$ scp examples/emcute_mqttsn/bin/iotlab-a8-m3/emcute_mqttsn.elf root@node-a8-102:
+sannikov@saclay:~/RIOT/$ ssh root@node-a8-102
+root@node-a8-102:~# flash_a8_m3 emcute_mqttsn.elf
+```
+
+Далее, используем программу miniterm.pyдля доступа к интерфейсу оболочки третьего узла и вводим "help"
+
+Как можно заметить данные после вывода двоятся, но считывание кода идет корректно
+
+```
+root@node-a8-102:~# miniterm.py /dev/ttyA8_M3 500000 -e
+--- Miniterm on /dev/ttyA8_M3  500000,8,N,1 ---
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---
+hheellpp
+```
+
+
+```
+> hheellpp
+
+Command              Description
+---------------------------------------
+con                  connect to MQTT broker
+discon               disconnect from the current broker
+pub                  publish something
+sub                  subscribe topic
+unsub                unsubscribe from topic
+will                 register a last will
+reboot               Reboot the node
+version              Prints current RIOT_VERSION
+pm                   interact with layered PM subsystem
+ps                   Prints information about running threads.
+ping6                Ping via ICMPv6
+ping                 Alias for ping6
+nib                  Configure neighbor information base
+ifconfig             Configure network interfaces
+6ctx                 6LoWPAN context configuration tool
+
+
+```
+Следующие команды не удалось реабилитировать и возникали ошибки, возможно это связано со скоростью интернета или скорости термина
+```
+ > con 2001:660:3207:400::66 1885
+ > sub test/riot
+```
+ВЫВОД
+```
+> 
+> con 2con 2001:660:3001:660:3207:400:207:400::66 188:66 18855
+
+error: unable to connect to [2001:660:3207:400::66]:1885
+> 
+> ␛[␛[AA
+
+shell: command not found: ␛[A
+> 
+> con 2001con 2001:660:320:660:3207:400::67:400::66 18856 1885
+
+error: unable to connect to [2001:660:3207:400::66]:1885
+> 
+> con 20con 2001:660:301:660:3207:400:207:400::65 1885:65 1885
+
+error: unable to connect to [2001:660:3207:400::65]:1885
+> 
+> con 2con 2001:660:001:660:3207:400:3207:400::65 1885:65 1885
+
+error: unable to connect to [2001:660:3207:400::65]:1885
+> 
+> con con 2001:6602001:660:3207:40:3207:400::64 180::64 188585
+
+error: unable to connect to [2001:660:3207:400::64]:1885
+> 
+> subsub test/r test/riotiot
+
+error: unable to subscribe to test/riot
+> 
+> 
+```
+**Проверка механизма публикации**
+
+Четвертый терминал планировался использоваться для проверки механизма публикации/подписки между MQTT-брокером и клиентскими узлами. Но из-за возникновения ошибки в предыдущем терминале, данный этап также не осуществим 
+**Пример работы терминалов**
+<img width="1026" alt="image" src="https://user-images.githubusercontent.com/101215070/160013310-4a6d9512-b108-406f-9ab6-5407d3e91d97.png">
+
