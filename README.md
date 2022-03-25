@@ -409,12 +409,12 @@ contiki-iotlab-a8-m3.a  contiki-iotlab-m3.a  Makefile  obj_iotlab-a8-m3  obj_iot
  ```
 sannikov@grenoble:~/iot-lab/parts/contiki/examples/iotlab/03-sensors-collecting$ ssh sannikov@grenoble.iot-lab.info
  ``` 
- В данном эксперементе использовался узел с номером 99
+ В данном эксперементе использовался нод с номером 99
  
 ``` 
 sannikov@grenoble:~$ nc m3-99 20000
  ``` 
- **Показания датчика во времени**
+ **Показания датчиков во времени**
  
 ``` 
 gyros: 140 -892 61 xyz m°/s
@@ -503,21 +503,24 @@ gyros: 1111 -236 -113 xyz m°/s
  В данной работе мы изучили работу в настройенной среде, взаимодейсвие с виртуальными узлами M3 и A8, метод их компеляции  и как запускать эксперемент на веб-сервере через терминал 
  ## Проведение эксперемента №2
 Целью данной работы является создание профиля для мониторинга радиоактивности во время эксперимента, когда 2 узла обмениваются данными. Так как каждый узел эксперимента управляется своим узлом управления (недоступным для экспериментатора), который взаимодействует пассивно или активно. Он отслеживает потребление узла, мощность радиосигнала (RSSI) и выбирает источник питания (аккумулятор или постоянный ток с Poe). Сам профиль представляет собой конфигурацию узла управления во время эксперимента.
+
  **Изучение прошивки и установка радиоканала**
+ 
  На данном этаме нужно было изучить файлы прошивки и задать номер канала. В данной работе мы использовали для 1 радиоканала - 11 канал. 
   ``` 
 sannikov@grenoble:~/iot-lab/parts/openlab$ cd appli/iotlab_examples/tutorial 
 sannikov@grenoble:~/iot-lab/parts/openlab/appli/iotlab_examples/tutorial$ cat README.md
 sannikov@grenoble:~/iot-lab/parts/openlab/appli/iotlab_examples/tutorial$ less main.c
 ``` 
-*Компиляция прошивки*
+**Компиляция прошивки**
 Скомпилировали обучающую прошивку в директорию build.m3/ (сгенерируйте бинарные файлы *.elf с поддержкой радиочипсета at86rf231)
   ``` 
 sannikov@grenoble:~/iot-lab/parts/openlab/build.m3$ make tutorial_m3 
 sannikov@grenoble:~/iot-lab/parts/openlab/build.m3$ ls bin/tutorial_m3 .elf 
 bin/tutorial_m3.elf
 ``` 
-*Скачивание файла на компьютер*
+**Скачивание файла на компьютер**
+
 Для этого мы открыли новый терминал
 ``` 
 oldest@oldest-Lenovo-ideapad-320-15IKB:~$ scp sannikov@grenoble:~/iot-lab/parts/openlab/build.m3/bin/tutorial_m3.elf tutorial_m3.elf 
@@ -526,9 +529,12 @@ oldest@oldest-Lenovo-ideapad-320-15IKB:~$ ls tutorial_m3.elf
 tutorial_m3.elf
 ``` 
 tutorial_m3.elf - требуемый файл
-*Производим необходимые настройки на портале*
+
+**Производим необходимые настройки на портале**
+
 <img width="1439" alt="image" src="https://user-images.githubusercontent.com/101215070/160003741-1201634f-d086-4268-af81-514aac85b5bb.png">
-*Запсукаем наш эксперемент из профиля*
+
+**Запсукаем наш эксперемент из профиля**
 В настройках эксперемнта мы выбираем нужные узлы, сайт и количество узлов. А также добавляем наш файл с прошивкой и интегрируем нужные настройки созданные ранее
 
 <img width="400" alt="image" src="https://user-images.githubusercontent.com/101215070/160004660-2f1f9667-f660-4546-94f3-9116c2b3fbf3.png">
@@ -569,10 +575,10 @@ ssh sannikov@grenoble.iot-lab.info
 sannikov@grenoble:~$ nc m3-101 20000
  ``` 
  
- **Отправка  радиопакетов*
+ **Отправка  радиопакетов**
  На первом терминале мы отправляем радиопакеты, второй терминал их получает 
  <img width="935" alt="image" src="https://user-images.githubusercontent.com/101215070/160006094-94e2312d-0612-4620-a61d-d157e2d61cdf.png">
-  **Вывод собранных данных*
+  **Вывод собранных данных**
   
  Измеренные значения RSSI можно хранить домашней папке с файлами oml.
    ``` 
